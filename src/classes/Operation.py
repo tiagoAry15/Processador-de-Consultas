@@ -1,6 +1,6 @@
 class Operation:
-    def __init__(self, op_type, code):
-        self.op_type = op_type
+    def __init__(self, type, code):
+        self.type = type
         self.code = code
         self.children = []
 
@@ -8,4 +8,4 @@ class Operation:
         self.children.append(child)
 
     def __repr__(self):
-        return f"Operation({self.op_type}, {self.code})"
+        return f"Operation({self.type}, {self.code})"

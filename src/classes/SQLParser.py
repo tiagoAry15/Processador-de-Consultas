@@ -1,6 +1,6 @@
 import re
-from BinaryTree import BinaryTree
-from Operation import Operation
+
+from classes.Operation import Operation
 
 
 class SQLParser:
@@ -28,8 +28,8 @@ class SQLParser:
             self.parse_select()
         else:
             raise ValueError("A consulta SQL deve começar com SELECT")
-        if self.operations:
-            self.tree.root = self.operations[0]
+
+        return self.operations
 
     def parse_select(self):
         columns = []
@@ -56,7 +56,7 @@ class SQLParser:
         if self.tokens and re.match(r'\w+', self.tokens[0]):
             table = self.tokens.pop(0)
             self.operations.append(
-                Operation('TABLE', ' '.join(table)))
+                Operation('TABLE', ''.join(table)))
         else:
             raise ValueError("Nenhuma tabela encontrada após FROM")
 
@@ -75,7 +75,7 @@ class SQLParser:
                 condition.append(self.tokens.pop(0))
             print("  ", " ".join(condition))
             self.operations.append(
-                Operation('SELECTION', ' '.join(condition)))
+                Operation('SELECTION WHERE', ' '.join(condition)))
 
             if self.tokens and self.tokens[0] == "and":
                 self.tokens.pop(0)  # Remove 'and'
@@ -88,11 +88,10 @@ class SQLParser:
             self.tokens.pop(0)  # Remove 'join'
             if self.tokens and re.match(r'\w+', self.tokens[0]):
                 table = self.tokens.pop(0)
-                join_op = Operation("UNION", '')
-                self.operations.append(
-                    Operation('TABLE', ' '.join(table)))
-                self.operations[-1].add_child(join_op)
+                join_op = Operation("UNION", 'X')
                 self.operations.append(join_op)
+                self.operations.append(
+                    Operation('TABLE', ''.join(table)))
 
                 if self.tokens and self.tokens[0] == "on":
                     self.parse_on()
@@ -103,7 +102,6 @@ class SQLParser:
                 raise ValueError("Nenhuma tabela encontrada após JOIN")
 
     def parse_on(self):
-        on_conditions = []
 
         self.tokens.pop(0)  # Remove 'on'
         while self.tokens and self.tokens[0] not in ["join"]:
@@ -114,7 +112,7 @@ class SQLParser:
                 else:
                     condition.append(self.tokens.pop(0))
 
-            on_op = Operation("SELECTION", ' '.join(condition))
+            on_op = Operation("SELECTION ON", ' '.join(condition))
             self.operations[-1].add_child(on_op)
             self.operations.append(on_op)
 
@@ -126,7 +124,3 @@ class SQLParser:
 
 
 # Exemplo de uso do analisador
-query = "SELECT col1, col2 FROM table1 JOIN table2 ON table1.id = table2.id AND table1.value > table2.value WHERE col1 = 5 AND col2 IN (1, 2, 3)"
-parser = SQLParser(query)
-parser.parse()
-print(parser.operations)

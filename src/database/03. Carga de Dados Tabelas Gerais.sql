@@ -1,6 +1,6 @@
 Start Transaction ;
 
-Use exercicios;
+Use Exercicios;
 
 INSERT INTO `categoria`
 (`idCategoria`,
