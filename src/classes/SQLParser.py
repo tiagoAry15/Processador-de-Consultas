@@ -8,6 +8,15 @@ class SQLParser:
         self.query = query.lower()
         self.tokens = []
         self.operations = []
+        self.elements = {
+
+            'TABLES': [],
+            'PROJECTION': [],
+            'WHERE_SELECTION': [],
+            'UNION': [],
+            'ON_SELECTION': []
+
+        }
 
     def tokenize(self):
         keywords = r"(select|from|where|join|on|and|in|not in)"
@@ -29,7 +38,7 @@ class SQLParser:
         else:
             raise ValueError("A consulta SQL deve começar com SELECT")
 
-        return self.operations
+        return self.elements
 
     def parse_select(self):
         columns = []
@@ -39,10 +48,7 @@ class SQLParser:
             columns.append(self.tokens.pop(0))
 
         if columns:
-            print(f"Colunas selecionadas: {' '.join(columns)}")
-
-            projection_op = Operation("PROJECTION", ''.join(columns))
-            self.operations.append(projection_op)
+            self.elements['PROJECTION'] = columns
         else:
             raise ValueError("Nenhuma coluna encontrada após SELECT")
 
@@ -55,15 +61,16 @@ class SQLParser:
         self.tokens.pop(0)  # Remove 'from'
         if self.tokens and re.match(r'\w+', self.tokens[0]):
             table = self.tokens.pop(0)
-            self.operations.append(
-                Operation('TABLE', ''.join(table)))
-        else:
-            raise ValueError("Nenhuma tabela encontrada após FROM")
+
+            self.elements['TABLES'].append(table)
+            if not table:
+                raise ValueError("Nenhuma tabela encontrada após FROM")
 
         if self.tokens:
             if self.tokens[0] == "where":
                 self.parse_where()
             elif self.tokens[0] == "join":
+                self.elements['UNION'].append(table)
                 self.parse_join()
 
     def parse_where(self):
@@ -73,9 +80,8 @@ class SQLParser:
             condition = []
             while self.tokens and self.tokens[0] not in ["and", "join"]:
                 condition.append(self.tokens.pop(0))
-            print("  ", " ".join(condition))
-            self.operations.append(
-                Operation('SELECTION WHERE', ' '.join(condition)))
+
+            self.elements['WHERE_SELECTION'].append(' '.join(condition))
 
             if self.tokens and self.tokens[0] == "and":
                 self.tokens.pop(0)  # Remove 'and'
@@ -88,10 +94,10 @@ class SQLParser:
             self.tokens.pop(0)  # Remove 'join'
             if self.tokens and re.match(r'\w+', self.tokens[0]):
                 table = self.tokens.pop(0)
-                join_op = Operation("UNION", 'X')
-                self.operations.append(join_op)
-                self.operations.append(
-                    Operation('TABLE', ''.join(table)))
+
+                self.elements['UNION'].append('|X|')
+
+                self.elements['UNION'].append(table)
 
                 if self.tokens and self.tokens[0] == "on":
                     self.parse_on()
@@ -112,9 +118,7 @@ class SQLParser:
                 else:
                     condition.append(self.tokens.pop(0))
 
-            on_op = Operation("SELECTION ON", ' '.join(condition))
-            self.operations[-1].add_child(on_op)
-            self.operations.append(on_op)
+            self.elements['ON_SELECTION'].append(''.join(condition))
 
             if self.tokens and self.tokens[0] == "and":
                 self.tokens.pop(0)  # Remove 'and'
