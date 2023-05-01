@@ -21,7 +21,7 @@ class TipoConta:
 class Contas:
     TABLE_NAME = "Contas"
     ID_CONTA = "idConta"
-    DESCRICAO = "Descricao"
+    DESCRICAO = "descricao"
     TIPO_CONTA_ID_TIPO_CONTA = "TipoConta_idTipoConta"
     USUARIO_ID_USUARIO = "Usuario_idUsuario"
     SALDO_INICIAL = "SaldoInicial"
@@ -43,22 +43,31 @@ class Movimentacao:
     TABLE_NAME = "Movimentacao"
     ID_MOVIMENTACAO = "idMovimentacao"
     DATA_MOVIMENTACAO = "DataMovimentacao"
-    DESCRICAO = "Descricao"
+    DESCRICAO = "Descrição"
     TIPO_MOVIMENTO_ID_TIPO_MOVIMENTO = "TipoMovimento_idTipoMovimento"
     CATEGORIA_ID_CATEGORIA = "Categoria_idCategoria"
     CONTAS_ID_CONTA = "Contas_idConta"
     VALOR = "Valor"
 
 
-def verifica_atributo(atributo):
-    classes = [Usuario, TipoConta, Contas,
-               TipoMovimento, Categoria, Movimentacao]
+dict_classes = {
+    'usuario': Usuario,
+    'tipoconta': TipoConta,
+    'contas': Contas,
+    'tipomovimento': TipoMovimento,
+    'categoria': Categoria,
+    'movimentacao': Movimentacao
 
-    for classe in classes:
-        if atributo in vars(classe).values():
-            return f"O atributo '{atributo}' pertence à classe {classe.__name__}"
-    return f"O atributo '{atributo}' não pertence a nenhuma das classes"
+}
 
 
-def verifica_atributo(atributo, classe):
-    return atributo in vars(classe).values()
+def find_class_for_attribute(attribute):
+    for class_name, class_obj in dict_classes.items():
+        if any(val.lower() == attribute.lower() for val in vars(class_obj).values() if isinstance(val, str)):
+            return class_name
+    return None
+
+
+def is_attribute_in_class(attribute, class_name):
+    class_obj = dict_classes[class_name]
+    return any(val.lower() == attribute.lower() for val in vars(class_obj).values() if isinstance(val, str))

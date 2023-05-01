@@ -8,6 +8,7 @@ query = "Select nome, datanascimento, descricao, saldoinicial from usuario join 
 parser = SQLParser(query)
 # Parse
 query = parser.parse()
+
 optimizer = Optimizer(query)
 
-print(optimizer.optimize_query())
+print(' '.join(optimizer.optimize_query()))

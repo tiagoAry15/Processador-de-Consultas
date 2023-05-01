@@ -5,7 +5,7 @@ from classes.Operation import Operation
 
 class SQLParser:
     def __init__(self, query):
-        self.query = query.lower()
+        self.query = query
         self.tokens = []
         self.operations = []
         self.elements = {
@@ -19,7 +19,7 @@ class SQLParser:
         }
 
     def tokenize(self):
-        keywords = r"(select|from|where|join|on|and|in|not in)"
+        keywords = r"(Select|from|where|join|on|and|in|not in)"
         operators = r"(\=|>|<|<=|>=|<>\(|\))"
         word = r"(\w+)"
         whitespace = r"(\s+)"
@@ -33,7 +33,7 @@ class SQLParser:
     def parse(self):
         self.tokenize()
 
-        if self.tokens and self.tokens[0] == "select":
+        if self.tokens and self.tokens[0] == "Select":
             self.parse_select()
         else:
             raise ValueError("A consulta SQL deve começar com SELECT")
@@ -80,8 +80,12 @@ class SQLParser:
             condition = []
             while self.tokens and self.tokens[0] not in ["and", "join"]:
                 condition.append(self.tokens.pop(0))
-
-            self.elements['WHERE_SELECTION'].append(' '.join(condition))
+            condition = ''.join(condition)
+            match = re.search(
+                r"([\wáéíóúàèìòùâêîôûãõç]+)\s*([=<>]{1,2})\s*([\wáéíóúàèìòùâêîôûãõç]+)", condition)
+            if match:
+                attr, op, value = match.groups()
+                self.elements['WHERE_SELECTION'].append(f"{attr} {op} {value}")
 
             if self.tokens and self.tokens[0] == "and":
                 self.tokens.pop(0)  # Remove 'and'
@@ -98,6 +102,7 @@ class SQLParser:
                 self.elements['UNION'].append('|X|')
 
                 self.elements['UNION'].append(table)
+                self.elements['TABLES'].append(table)
 
                 if self.tokens and self.tokens[0] == "on":
                     self.parse_on()
@@ -118,6 +123,7 @@ class SQLParser:
                 else:
                     condition.append(self.tokens.pop(0))
 
+            condition = [elem if elem != '=' else ' = ' for elem in condition]
             self.elements['ON_SELECTION'].append(''.join(condition))
 
             if self.tokens and self.tokens[0] == "and":
@@ -125,6 +131,3 @@ class SQLParser:
 
         if self.tokens and self.tokens[0] == "join":
             self.parse_join()
-
-
-# Exemplo de uso do analisador
