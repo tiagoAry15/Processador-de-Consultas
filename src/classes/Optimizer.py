@@ -2,7 +2,8 @@ from Constantes_tables import find_class_for_attribute, is_attribute_in_class
 
 
 class Optimizer:
-
+    #Query frase
+    #Elements dicionario
     def __init__(self, elements):
         self.elements = elements
         self.query = []

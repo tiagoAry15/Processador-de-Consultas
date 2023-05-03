@@ -1,5 +1,4 @@
 
-from classes.BinaryTree import BinaryTree
 from classes.Optimizer import Optimizer
 from classes.SQLParser import SQLParser
 
